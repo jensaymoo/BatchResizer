@@ -1,0 +1,18 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.7.34221.43
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "BatchResizer", "BatchResizer\BatchResizer.shproj", "{C6DAC15D-CFEC-4BB8-912C-2EE6079EB85A}"
+EndProject
+Global
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {A1109EA0-2763-4D79-89E8-385540F9C45F}
+	EndGlobalSection
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		BatchResizer\BatchResizer.projitems*{c6dac15d-cfec-4bb8-912c-2ee6079eb85a}*SharedItemsImports = 13
+	EndGlobalSection
+EndGlobal
