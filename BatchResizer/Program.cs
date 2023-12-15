@@ -1,89 +1,94 @@
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Jpeg;
+using SixLabors.ImageSharp.Metadata.Profiles.Exif;
 using SixLabors.ImageSharp.Processing;
-using System.Text;
 using Image = SixLabors.ImageSharp.Image;
 using Size = SixLabors.ImageSharp.Size;
 
 namespace BatchResizer
 {
- 
     internal static class Program
     {
         [STAThread]
-        static void Main()
+        static void Main(string[] args)
         {
-            ApplicationConfiguration.Initialize();
+            Configuration config;
 
-            var config = new JObject();
-            config["quality"] = 80;
-            config["width"] = 640;
-            config["height"] = 640;
-            config["grayscale"] = true;
-
-            var config_path = Environment.CurrentDirectory + "\\config.json";
-
-            //if (File.Exists(config_path))
-            //    config = JObject.Parse(File.ReadAllText(config_path));
-            
-            //File.WriteAllText(config_path, config.ToString());
+            try
+            {
+                //грузим настройки с файла config.json
+                config = ConfigurationManager.GetConfiguration();
+            }
+            catch
+            {
+                //если не удалость по какой либо причине загрузить то ставим настройки до дефолту
+                config = new Configuration();
+            }
 
             var jpeg_encoder = new JpegEncoder()
             {
                 ColorType = JpegEncodingColor.YCbCrRatio420,
-                Quality = (int)config["quality"],
+                Quality = config.Quality,
                 SkipMetadata = true
             };
 
             var resize_opt = new ResizeOptions
             {
                 Mode = ResizeMode.Crop,
-                Size = new Size((int)config["width"], (int)config["height"])
+                Size = new Size(config.Width, config.Height)
             };
 
-            List<string> not_conveted = new List<string>();
-            using (var dialog = new FolderBrowserDialog())
+            //собираем список файлов
+            List<string> files = new List<string>();
+            foreach (var path in args)
             {
-                var result_browser = dialog.ShowDialog();
-                if (result_browser == DialogResult.OK)
+                if (File.Exists(path))
                 {
-                    var dir_info = new DirectoryInfo(dialog.SelectedPath);
-                    Parallel.ForEach(dir_info.GetFiles("*.jpg"), file =>
-                    {
-                        try
-                        {
-                            using (var image = Image.Load(file.FullName))
-                            {
-                                image.Metadata.ExifProfile = null;
+                    if (Path.GetExtension(path).ToUpper() == ".JPG")
+                        files.Add(path);
+                }
 
-                                if ((bool)config["grayscale"])
-                                    image.Mutate(i => i.Resize(resize_opt).Grayscale());
-                                else
-                                    image.Mutate(i => i.Resize(resize_opt));
+                if (Directory.Exists(path))
+                {
+                    var dir = new DirectoryInfo(path);
+                    var found_files = dir.GetFiles("*.JPG").Select(d => d.FullName);
 
-                                image.Save(file.FullName, jpeg_encoder);
-                            }
-                        }
-                        catch
-                        {
-                            not_conveted.Add(file.Name);
-                        }
-                    });
-
-                    if (not_conveted.Count > 0)
-                    {
-                        StringBuilder sb = new StringBuilder();
-                        sb.AppendLine($"При конвертации изображений в каталоге \"{dialog.SelectedPath}\" возникли сложности, следующие файлы не были преобразованы: \n");
-
-                        foreach (var error in not_conveted)
-                            sb.AppendLine(error);
-
-                        MessageBox.Show(sb.ToString(), "Возникли некоторые сложности...", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                    }
+                    files.AddRange(found_files);
                 }
             }
+
+            Parallel.ForEach(files.Distinct(), file =>
+            {
+                try
+                {
+                    using (var image = Image.Load(file))
+                    {
+                        ExifProfile profile = new ExifProfile();
+
+                        var exif_tags = image.Metadata.ExifProfile?.Values
+                            .Where(d => !d.Equals(ExifTag.Orientation))
+                            .Select(v => v.Tag)
+                            .ToList();
+
+                        exif_tags?.ForEach(tag =>
+                        {
+                            image.Metadata.ExifProfile!.RemoveValue(tag);
+                        });
+
+                        image.Mutate(i => i.Resize(resize_opt));
+
+
+                        if (config.Grayscale)
+                            image.Mutate(i => i.Grayscale());
+
+                        image.Save(file, jpeg_encoder);
+                    }
+                }
+                catch
+                {
+                    return;
+                }
+            });
         }
     }
 }
