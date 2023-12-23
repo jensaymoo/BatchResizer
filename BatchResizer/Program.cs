@@ -12,18 +12,7 @@ namespace BatchResizer
         [STAThread]
         static void Main(string[] args)
         {
-            Configuration config;
-
-            try
-            {
-                //грузим настройки с файла config.json
-                config = ConfigurationManager.GetConfiguration();
-            }
-            catch
-            {
-                //если не удалость по какой либо причине загрузить то ставим настройки до дефолту
-                config = new Configuration();
-            }
+            Configuration config = ConfigurationManager.GetConfiguration();
 
             var jpeg_encoder = new JpegEncoder()
             {

@@ -56,13 +56,17 @@ namespace BatchResizer
             {
                 lock (sync)
                 {
-                    if (instance == null)
+                    try
                     {
-                        var asm_path = Path.GetDirectoryName(Process.GetCurrentProcess().MainModule!.FileName);                        
+                        var asm_path = Path.GetDirectoryName(Process.GetCurrentProcess().MainModule!.FileName);
                         instance = JsonConvert.DeserializeObject<Configuration>(File.ReadAllText(asm_path + "\\config.json"))!;
 
                         var validator = new ConfigurationValidator();
                         validator.ValidateAndThrow(instance);
+                    }
+                    catch
+                    {
+                        instance = new Configuration();
                     }
                 }
             }
