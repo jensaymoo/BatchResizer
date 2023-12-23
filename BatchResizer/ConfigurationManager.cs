@@ -7,13 +7,13 @@ namespace BatchResizer
 {
     internal class Configuration
     {
-        public int Quality { get; set; } = 80;
-        public int Height { get; set; } = 480;
+        public int? Quality { get; set; } = 80;
+        public int? Height { get; set; } = 480;
 
-        public int Width { get; set; } = 480;
+        public int? Width { get; set; } = 480;
 
-        public ResizeMode Mode { get; set; } = ResizeMode.Max;
-        public bool Grayscale { get; set; } = false;
+        public ResizeMode? Mode { get; set; } = ResizeMode.Max;
+        public bool? Grayscale { get; set; } = false;
 
     }
     internal class ConfigurationValidator :  AbstractValidator<Configuration>
@@ -43,6 +43,9 @@ namespace BatchResizer
                 .NotNull()
                 .NotEmpty();
 
+            RuleFor(opt => opt.Mode)
+                .NotEmpty()
+                .IsInEnum();
         }
     }
 
@@ -57,18 +60,20 @@ namespace BatchResizer
         {
             if (instance == null)
             {
+                var asm_path = Path.GetDirectoryName(Process.GetCurrentProcess().MainModule!.FileName);
+
                 lock (sync)
                 {
                     try
                     {
-                        var asm_path = Path.GetDirectoryName(Process.GetCurrentProcess().MainModule!.FileName);
                         instance = JsonConvert.DeserializeObject<Configuration>(File.ReadAllText(asm_path + "\\config.json"))!;
 
                         var validator = new ConfigurationValidator();
                         validator.ValidateAndThrow(instance);
                     }
-                    catch
+                    catch (Exception ex) 
                     {
+                        File.WriteAllText(asm_path + "\\last_error.log", ex.Message);
                         instance = new Configuration();
                     }
                 }

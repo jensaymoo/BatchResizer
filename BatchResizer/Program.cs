@@ -23,8 +23,8 @@ namespace BatchResizer
 
             var resize_opt = new ResizeOptions
             {
-                Mode = config.Mode,
-                Size = new Size(config.Width, config.Height)
+                Mode = config.Mode!.Value,
+                Size = new Size(config.Width!.Value, config.Height!.Value)
             };
 
             //собираем список файлов
@@ -67,7 +67,7 @@ namespace BatchResizer
                         image.Mutate(i => i.Resize(resize_opt));
 
 
-                        if (config.Grayscale)
+                        if (config.Grayscale!.Value)
                             image.Mutate(i => i.Grayscale());
 
                         image.Save(file, jpeg_encoder);
