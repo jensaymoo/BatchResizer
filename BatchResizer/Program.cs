@@ -23,7 +23,7 @@ namespace BatchResizer
 
             var resize_opt = new ResizeOptions
             {
-                Mode = ResizeMode.Crop,
+                Mode = config.Mode,
                 Size = new Size(config.Width, config.Height)
             };
 

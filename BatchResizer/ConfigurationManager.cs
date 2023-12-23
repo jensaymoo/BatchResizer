@@ -1,5 +1,6 @@
 ﻿using FluentValidation;
 using Newtonsoft.Json;
+using SixLabors.ImageSharp.Processing;
 using System.Diagnostics;
 
 namespace BatchResizer
@@ -10,6 +11,8 @@ namespace BatchResizer
         public int Height { get; set; } = 480;
 
         public int Width { get; set; } = 480;
+
+        public ResizeMode Mode { get; set; } = ResizeMode.Max;
         public bool Grayscale { get; set; } = false;
 
     }
